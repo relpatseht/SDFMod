@@ -1,0 +1,11 @@
+[submodule "code/external/allegro/5.2.3"]
+	path = code/external/allegro/5.2.3
+	url = git@github.com:liballeg/allegro5
+	branch = 5.2.3
+[submodule "code/external/glm/0.9.8"]
+	path = code/external/glm/0.9.8
+	url = git@github.com:g-truc/glm
+	branch = 0.9.8
+[submodule "code/external/nuklear/2.16.2018-19ce2bf"]
+	path = code/external/nuklear/2.16.2018-19ce2bf
+	url = git@github.com:vurtun/nuklear
