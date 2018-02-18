@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <CodeFolder>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory).'))</CodeFolder>
+    <CodeModulesFolder>$(CodeFolder)\modules</CodeModulesFolder>
+    <CodeExternalFolder>$(CodeFolder)\external</CodeExternalFolder>
+    <CodeSourceFolder>$(CodeFolder)\source</CodeSourceFolder>
+
+    <AppFolder>$(CodeFolder)\..\app</AppFolder>
+
+    <GLFWFolder>$(CodeExternalFolder)\glfw\3.2.1</GLFWFolder>
+    <GLMFolder>$(CodeExternalFolder)\glm\0.9.8</GLMFolder>
+    <NuklearFolder>$(CodeExternalFolder)\nuklear/2018.02.16-19cd2bf</NuklearFolder>
+    <VulkanFolder>$(VULKAN_SDK)/../1.0.68.0</VulkanFolder>
+    <GLSLangFolder>$(VulkanFolder)/glslang</GLSLangFolder>
+
+    <GLFWIncludePath>$(GLFWFolder)\include;</GLFWIncludePath>
+    <GLMIncludePath>$(GLMFolder)</GLMIncludePath>
+    <NuklearIncludePath>$(NuklearFolder)</NuklearIncludePath>
+    <VulkanIncludePath>$(VulkanFolder)/Include</VulkanIncludePath>
+    <GLSLangIncludePath>$(GLSLangFolder)</GLSLangIncludePath>
+    
+    <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
+    <GLSLangLibraryPath>$(GLSLangFolder)/build</GLSLangLibraryPath>
+
+    <RootImported>true</RootImported>
+  </PropertyGroup> 
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- 4127 : conditional expression is constant -->
+      <DisableSpecificWarnings>4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+
+      <!-- 4201 : nonstandard extension used: nameless struct/union -->
+      <DisableSpecificWarnings>4201;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+
+      <!-- 4324 : structure was padded due to alignment specifier -->
+      <DisableSpecificWarnings>4324;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+
+      <!-- 5040 : dynamic exception specifications are valid only in C++14 and earlier; treating as noexcept(false) -->
+      <DisableSpecificWarnings>5040;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+
+      <!-- 6255 : alloca indicates failure by raising a stack overflow exception. -->
+      <DisableSpecificWarnings>6255;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>
