@@ -2,9 +2,6 @@
 	path = code/external/glm/0.9.8
 	url = git@github.com:g-truc/glm
 	branch = 0.9.8
-[submodule "code/external/nuklear/2018.02.16-19ce2bf"]
-	path = code/external/nuklear/2018.02.16-19ce2bf
-	url = git@github.com:vurtun/nuklear
 [submodule "code/external/glfw/3.2.1"]
 	path = code/external/glfw/3.2.1
 	url = git@github.com:glfw/glfw
@@ -12,3 +9,6 @@
 [submodule "code/external/nuklear/2018.02.17-1626610"]
 	path = code/external/nuklear/2018.02.17-1626610
 	url = git@github.com:vurtun/nuklear
+[submodule "code/external/glslang/7.13.3496"]
+	path = code/external/glslang/7.13.3496
+	url = git@github.com:KhronosGroup/glslang.git
