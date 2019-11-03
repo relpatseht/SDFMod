@@ -8,11 +8,11 @@
 
     <AppFolder>$(CodeFolder)\..\app</AppFolder>
 
-    <GLFWFolder>$(CodeExternalFolder)\glfw\3.2.1</GLFWFolder>
-    <GLMFolder>$(CodeExternalFolder)\glm\0.9.8</GLMFolder>
-    <NuklearFolder>$(CodeExternalFolder)\nuklear/2018.02.16-19cd2bf</NuklearFolder>
-    <VulkanFolder>$(VULKAN_SDK)/../1.0.68.0</VulkanFolder>
-    <GLSLangFolder>$(VulkanFolder)/glslang</GLSLangFolder>
+    <GLFWFolder>$(CodeExternalFolder)\glfw\3.2.1\</GLFWFolder>
+    <GLMFolder>$(CodeExternalFolder)\glm\0.9.8\</GLMFolder>
+    <NuklearFolder>$(CodeExternalFolder)\nuklear\2018.02.16-19cd2bf\</NuklearFolder>
+    <GLSLangFolder>$(CodeExternalFolder)\glslang\7.13.3496\</GLSLangFolder>
+    <VulkanFolder>$(VULKAN_SDK)/../1.1.121.2</VulkanFolder>
 
     <GLFWIncludePath>$(GLFWFolder)\include;</GLFWIncludePath>
     <GLMIncludePath>$(GLMFolder)</GLMIncludePath>
@@ -21,7 +21,6 @@
     <GLSLangIncludePath>$(GLSLangFolder)</GLSLangIncludePath>
     
     <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
-    <GLSLangLibraryPath>$(GLSLangFolder)/build</GLSLangLibraryPath>
 
     <RootImported>true</RootImported>
   </PropertyGroup> 
