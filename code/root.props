@@ -8,9 +8,8 @@
 
     <AppFolder>$(CodeFolder)\..\app</AppFolder>
 
-    <GLFWFolder>$(CodeExternalFolder)\glfw\3.2.1\</GLFWFolder>
-    <GLMFolder>$(CodeExternalFolder)\glm\0.9.8\</GLMFolder>
-    <NuklearFolder>$(CodeExternalFolder)\nuklear\2018.02.16-19cd2bf\</NuklearFolder>
+    <GLFWFolder>$(CodeExternalFolder)\glfw\3.3\</GLFWFolder>
+    <GLMFolder>$(CodeExternalFolder)\glm\0.9.9.6\</GLMFolder>
     <GLSLangFolder>$(CodeExternalFolder)\glslang\7.13.3496\</GLSLangFolder>
     <VulkanFolder>$(VULKAN_SDK)/../1.1.121.2</VulkanFolder>
 
