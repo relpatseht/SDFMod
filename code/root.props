@@ -21,6 +21,11 @@
     
     <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
 
+    <IntDir>$(SolutionDir)obj/$(ProjectName)/$(Configuration)/</IntDir>
+    <OutDir>$(SolutionDir)bin/</OutDir>
+    <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)_d</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)</TargetName>
+
     <RootImported>true</RootImported>
   </PropertyGroup> 
   <ItemDefinitionGroup>
