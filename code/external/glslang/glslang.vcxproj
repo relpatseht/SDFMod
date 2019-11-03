@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(root.props))" Condition="$(RootImported) == ''" />
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{080D2A16-9EDF-3CCA-A46E-F38A3F968062}</ProjectGUID>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>glslang</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;GLSLANG_OSINCLUDE_WIN32;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;GLSLANG_OSINCLUDE_WIN32;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:x64 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;GLSLANG_OSINCLUDE_WIN32;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;GLSLANG_OSINCLUDE_WIN32;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:x64 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GLSLangFolder)glslang\OSDependent\Windows\ossource.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\attribute.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\Constant.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\glslang_tab.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\InfoSink.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\Initialize.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\Intermediate.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\intermOut.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\IntermTraverse.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\iomapper.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\limits.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\linkValidate.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\parseConst.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\ParseContextBase.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\ParseHelper.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\pch.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\PoolAlloc.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\propagateNoContraction.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\reflection.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\RemoveTree.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\Scan.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\ShaderLang.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\SymbolTable.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\Versions.cpp" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Public\ShaderLang.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\arrays.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\BaseTypes.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\Common.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\ConstantUnion.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\InfoSink.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\InitializeGlobals.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\intermediate.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\PoolAlloc.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\ResourceLimits.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\revision.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\ShHandle.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\Include\Types.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpContext.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpTokens.h" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\Pp.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpAtom.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpContext.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpScanner.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\MachineIndependent\preprocessor\PpTokens.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\GenericCodeGen\CodeGen.cpp" />
+    <ClCompile Include="$(GLSLangFolder)glslang\GenericCodeGen\Link.cpp" />
+    <ClInclude Include="$(GLSLangFolder)glslang\OSDependent\osinclude.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\attribute.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\glslang_tab.cpp.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\gl_types.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\Initialize.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\iomapper.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\LiveTraverser.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\localintermediate.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\ParseHelper.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\parseVersions.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\pch.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\propagateNoContraction.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\reflection.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\RemoveTree.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\Scan.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\ScanContext.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\SymbolTable.h" />
+    <ClInclude Include="$(GLSLangFolder)glslang\MachineIndependent\Versions.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(GLSLangFolder)glslang\MachineIndependent\glslang.m4" />
+    <None Include="$(GLSLangFolder)glslang\MachineIndependent\glslang.y" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
