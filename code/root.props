@@ -2,18 +2,17 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
     <CodeFolder>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory).'))</CodeFolder>
-    <CodeModulesFolder>$(CodeFolder)\modules</CodeModulesFolder>
-    <CodeExternalFolder>$(CodeFolder)\external</CodeExternalFolder>
-    <CodeSourceFolder>$(CodeFolder)\source</CodeSourceFolder>
+    <ProjectFolder>$(CodeFolder)\..\</ProjectFolder>
+    <CodeExternalFolder>$(CodeFolder)\external\</CodeExternalFolder>
 
     <AppFolder>$(CodeFolder)\..\app</AppFolder>
 
-    <GLFWFolder>$(CodeExternalFolder)\glfw\3.3\</GLFWFolder>
-    <GLMFolder>$(CodeExternalFolder)\glm\0.9.9.6\</GLMFolder>
-    <GLSLangFolder>$(CodeExternalFolder)\glslang\7.13.3496\</GLSLangFolder>
+    <GLFWFolder>$(CodeExternalFolder)glfw\3.3\</GLFWFolder>
+    <GLMFolder>$(CodeExternalFolder)glm\0.9.9.6\</GLMFolder>
+    <GLSLangFolder>$(CodeExternalFolder)glslang\7.13.3496\</GLSLangFolder>
     <VulkanFolder>$(VULKAN_SDK)/../1.1.121.2</VulkanFolder>
 
-    <GLFWIncludePath>$(GLFWFolder)\include;</GLFWIncludePath>
+    <GLFWIncludePath>$(GLFWFolder)include;</GLFWIncludePath>
     <GLMIncludePath>$(GLMFolder)</GLMIncludePath>
     <NuklearIncludePath>$(NuklearFolder)</NuklearIncludePath>
     <VulkanIncludePath>$(VulkanFolder)/Include</VulkanIncludePath>
@@ -21,8 +20,8 @@
     
     <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
 
-    <IntDir>$(SolutionDir)obj/$(ProjectName)/$(Configuration)/</IntDir>
-    <OutDir>$(SolutionDir)bin/</OutDir>
+    <IntDir>$(ProjectFolder)obj/$(ProjectName)/$(Configuration)/</IntDir>
+    <OutDir>$(ProjectFolder)bin/</OutDir>
     <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)_d</TargetName>
     <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)</TargetName>
 

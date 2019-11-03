@@ -10,7 +10,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove(root.props))" Condition="$(RootImported) == ''" />
   <PropertyGroup Label="Globals">
     <ProjectGUID>{691EA4C0-CB82-3839-83C6-0C527F642BAC}</ProjectGUID>
     <Keyword>Win32Proj</Keyword>
@@ -18,6 +17,7 @@
     <ProjectName>OGLCompiler</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(root.props))" Condition="$(RootImported) == ''" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
