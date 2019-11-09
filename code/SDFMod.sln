@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDFMod", "source\SDFMod.vcxproj", "{D2938346-D11B-4AD5-A85F-4D157E651E2C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0D730639-2995-4602-A55A-53EA860FAD21} = {0D730639-2995-4602-A55A-53EA860FAD21}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{E0F22BA1-F77B-48B3-A2E3-4C5DCA426776}"
 EndProject
@@ -19,7 +22,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SPIRV", "external\glslang\S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{EE4DF649-60D7-49D2-813F-A94A3DB58151}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLSLCompiler", "tools\GLSLToC\GLSLToC.vcxproj", "{0D730639-2995-4602-A55A-53EA860FAD21}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLSLToC", "tools\GLSLToC\GLSLToC.vcxproj", "{0D730639-2995-4602-A55A-53EA860FAD21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

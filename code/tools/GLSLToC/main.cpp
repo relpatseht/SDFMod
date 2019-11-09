@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -32,6 +33,20 @@ struct Settings
 	std::string outputDir;
 	std::string decoration;
 };
+
+static const char* GetFilename(const char* dir)
+{
+	const char* nextSlash = dir;
+	const char* filename;
+
+	do
+	{
+		filename = nextSlash;
+		nextSlash = std::strpbrk(filename + 1, "/\\");
+	} while (nextSlash != nullptr);
+
+	return filename == dir ? dir : filename + 1;
+}
 
 static bool DirectoryExists(const char *dir)
 {
@@ -136,7 +151,7 @@ static bool ScanDirForFiles(const char *path, StringList *outFiles)
 	return ret;
 }
 
-static bool FindFile(const StringList *paths, std::string *inoutPath)
+static bool FindFile(const StringList &paths, std::string *inoutPath)
 {
 	char fileBuf[MAX_PATH];
 
@@ -151,11 +166,11 @@ static bool FindFile(const StringList *paths, std::string *inoutPath)
 		return true;
 	}
 
-	for (size_t pathIndex = 0; pathIndex < paths->size(); ++pathIndex)
+	for (size_t pathIndex = 0; pathIndex < paths.size(); ++pathIndex)
 	{
 		std::string testPath;
 
-		testPath = (*paths)[pathIndex];
+		testPath = paths[pathIndex];
 		testPath += '\\';
 		testPath += *inoutPath;
 
@@ -222,8 +237,12 @@ static bool ParseSettings(int argc, char *argv[], Settings *outSettings)
 
 					if (!DirectoryExists(fileBuf))
 					{
-						std::cout << "\"" << fileBuf << "\" is not a valid directory." << std::endl;
-						return false;
+						std::cout << fileBuf << " does not exist. Creating." << std::endl;
+						if (!std::filesystem::create_directory(fileBuf))
+						{
+							std::cout << "Failed to create directory \"" << fileBuf << "\"." << std::endl;
+							return false;
+						}
 					}
 
 					if (!outSettings->outputDir.empty())
@@ -278,7 +297,7 @@ static bool ParseSettings(int argc, char *argv[], Settings *outSettings)
 
 	if (!outSettings->forceInclude.empty())
 	{
-		if (!FindFile(&outSettings->includeDirs, &outSettings->forceInclude))
+		if (!FindFile(outSettings->includeDirs, &outSettings->forceInclude))
 		{
 			std::cout << "\"" << outSettings->forceInclude << "\" is not a valid file." << std::endl;
 			return false;
@@ -327,17 +346,17 @@ static void PrintHelp()
 	std::cout << std::endl;
 }
 
-static uint64_t GetLastModifiedTime(const std::string *file, FileModifiedMap *map)
+static uint64_t GetLastModifiedTime(const std::string &file, FileModifiedMap *inoutMap)
 {
-	const FileModifiedMap::const_iterator fileIt = map->find(*file);
+	const FileModifiedMap::const_iterator fileIt = inoutMap->find(file);
 
-	if (fileIt != map->cend())
+	if (fileIt != inoutMap->cend())
 	{
 		return fileIt->second;
 	}
 	else
 	{
-		const HANDLE hFile = CreateFile(file->c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+		const HANDLE hFile = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 		uint64_t time;
 
 		time = 0;
@@ -349,7 +368,7 @@ static uint64_t GetLastModifiedTime(const std::string *file, FileModifiedMap *ma
 			{
 				time = (static_cast<uint64_t>(lastWrite.dwHighDateTime) << 32ULL) | lastWrite.dwLowDateTime;
 
-				map->insert(std::make_pair(*file, time));
+				inoutMap->insert(std::make_pair(file, time));
 			}
 
 			CloseHandle(hFile);
@@ -363,30 +382,30 @@ static void UpdateLastModifiedTime(const std::string *files, unsigned count, Fil
 {
 	for (unsigned fileIndex = 0; fileIndex < count; ++fileIndex)
 	{
-		const std::string * const file = files + fileIndex;
+		const std::string &file = files[fileIndex];
 
 		GetLastModifiedTime(file, outMap);
 	}
 }
 
-static bool LoadHeaderFile(const std::string *fileName, const std::string *fileCacheName, const StringList *includeDirs, StringList *outIncludeFiles, FileCache *fileCache);
+static bool LoadHeaderFile(const std::string &fileName, const std::string &fileCacheName, const StringList &includeDirs, FileCache *inoutFileCache, StringList* outIncludeFiles);
 
-static bool ParseIncludeDirective(const std::string *line, const StringList *includeDirs, StringList *outIncludeFiles, FileCache *fileCache)
+static bool ParseIncludeDirective(const std::string &line, const StringList &includeDirs, FileCache *inoutFileCache, StringList* outIncludeFiles)
 {
 	size_t includeStart;
 	size_t includeEnd;
 	std::string includeFile;
 	std::string includeName;
 
-	includeStart = line->find('"');
+	includeStart = line.find('"');
 	if (includeStart == std::string::npos)
 	{
-		includeStart = line->find('<');
-		includeEnd = line->find('>', includeStart + 1);
+		includeStart = line.find('<');
+		includeEnd = line.find('>', includeStart + 1);
 	}
 	else
 	{
-		includeEnd = line->find('"', includeStart + 1);
+		includeEnd = line.find('"', includeStart + 1);
 	}
 
 	if (includeStart == std::string::npos || includeEnd == std::string::npos)
@@ -395,7 +414,7 @@ static bool ParseIncludeDirective(const std::string *line, const StringList *inc
 		return false;
 	}
 
-	includeName = line->substr(includeStart + 1, includeEnd - includeStart - 1);
+	includeName = line.substr(includeStart + 1, includeEnd - includeStart - 1);
 	includeFile = includeName;
 	if (!FindFile(includeDirs, &includeFile))
 	{
@@ -405,7 +424,7 @@ static bool ParseIncludeDirective(const std::string *line, const StringList *inc
 
 	outIncludeFiles->push_back(includeFile);
 
-	if(!LoadHeaderFile(&includeFile, &includeName, includeDirs, outIncludeFiles, fileCache))
+	if(!LoadHeaderFile(includeFile, includeName, includeDirs, inoutFileCache, outIncludeFiles))
 	{
 		std::cout << "Failed to load header file \"" << includeFile << "\"." << std::endl;
 		return false;
@@ -414,7 +433,7 @@ static bool ParseIncludeDirective(const std::string *line, const StringList *inc
 	return true;
 }
 
-static bool LoadFileFromStream(std::istream *stream, const StringList *includeDirs, FileCache *fileCache, StringList *outIncludeFiles, std::ostream *outFile)
+static bool LoadFileFromStream(std::istream *stream, const StringList &includeDirs, FileCache *inoutFileCache, StringList *outIncludeFiles, std::ostream *outFile)
 {
 	std::string line;
 
@@ -422,7 +441,7 @@ static bool LoadFileFromStream(std::istream *stream, const StringList *includeDi
 	{
 		if (line.find("#include ") == 0)
 		{
-			if (!ParseIncludeDirective(&line, includeDirs, outIncludeFiles, fileCache))
+			if (!ParseIncludeDirective(line, includeDirs, inoutFileCache, outIncludeFiles))
 			{
 				return false;
 			}
@@ -434,30 +453,30 @@ static bool LoadFileFromStream(std::istream *stream, const StringList *includeDi
 	return true;
 }
 
-static bool LoadHeaderFile(const std::string *fileName, const std::string *fileCacheName, const StringList *includeDirs, StringList *outIncludeFiles, FileCache *fileCache)
+static bool LoadHeaderFile(const std::string &fileName, const std::string &fileCacheName, const StringList &includeDirs, FileCache* inoutFileCache, StringList *outIncludeFiles)
 {
-	if (fileCache->count(*fileName) == 0)
+	if (inoutFileCache->count(fileName) == 0)
 	{
-		std::ifstream file(fileName->c_str());
+		std::ifstream file(fileName.c_str());
 		std::ostringstream contents;
 
-		if (!LoadFileFromStream(&file, includeDirs, fileCache, outIncludeFiles, &contents))
+		if (!LoadFileFromStream(&file, includeDirs, inoutFileCache, outIncludeFiles, &contents))
 		{
 			return false;
 		}
 
-		fileCache->insert(std::make_pair(*fileCacheName, std::move(contents.str())));
+		inoutFileCache->insert(std::make_pair(fileCacheName, std::move(contents.str())));
 	}
 
 	return true;
 }
 
-static bool LoadSourceFile(const std::string *fileName, StringList *includeDirs, FileCache *fileCache, StringList *outIncludeFiles, std::string *outFile)
+static bool LoadSourceFile(const std::string &fileName, const StringList &includeDirs, FileCache *inoutFileCache, StringList *outIncludeFiles, std::string *outFile)
 {
-	std::ifstream file(fileName->c_str());
+	std::ifstream file(fileName.c_str());
 	std::ostringstream contents;
 
-	if (!LoadFileFromStream(&file, includeDirs, fileCache, outIncludeFiles, &contents))
+	if (!LoadFileFromStream(&file, includeDirs, inoutFileCache, outIncludeFiles, &contents))
 	{
 		return false;
 	}
@@ -467,18 +486,18 @@ static bool LoadSourceFile(const std::string *fileName, StringList *includeDirs,
 	return true;
 }
 
-static bool DetermineStageFromFileName(const std::string *fileName, EShLanguage *outStage)
+static bool DetermineStageFromFileName(const std::string &fileName, EShLanguage *outStage)
 {
 	size_t extStart;
 
-	extStart = fileName->rfind('.');
+	extStart = fileName.rfind('.');
 	if (extStart == std::string::npos)
 	{
-		std::cout << "No extension on \"" << fileName->c_str() << "\". Excluding from build." << std::endl;
+		std::cout << "No extension on \"" << fileName.c_str() << "\". Excluding from build." << std::endl;
 		return false;
 	}
 
-	switch ((*fileName)[extStart + 1])
+	switch (fileName[extStart + 1])
 	{
 		case 'f': case 'F':
 			*outStage = EShLangFragment;
@@ -496,7 +515,7 @@ static bool DetermineStageFromFileName(const std::string *fileName, EShLanguage 
 		{
 			std::string ext;
 		
-			ext = fileName->substr(extStart + 1);
+			ext = fileName.substr(extStart + 1);
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
 			if (ext == "tese")
@@ -511,116 +530,116 @@ static bool DetermineStageFromFileName(const std::string *fileName, EShLanguage 
 			}
 		}
 		default:
-			std::cout << "Unkown extension on \"" << fileName->c_str() << "\". Excluding from build." << std::endl;
+			std::cout << "Unkown extension on \"" << fileName.c_str() << "\". Excluding from build." << std::endl;
 			return false;
 	}
 
 	return true;
 }
 
-static void InitResources(TBuiltInResource *resources) 
+static void InitResources(TBuiltInResource *outResources) 
 {
-	resources->maxLights = 32;
-	resources->maxClipPlanes = 6;
-	resources->maxTextureUnits = 32;
-	resources->maxTextureCoords = 32;
-	resources->maxVertexAttribs = 64;
-	resources->maxVertexUniformComponents = 4096;
-	resources->maxVaryingFloats = 64;
-	resources->maxVertexTextureImageUnits = 32;
-	resources->maxCombinedTextureImageUnits = 80;
-	resources->maxTextureImageUnits = 32;
-	resources->maxFragmentUniformComponents = 4096;
-	resources->maxDrawBuffers = 32;
-	resources->maxVertexUniformVectors = 128;
-	resources->maxVaryingVectors = 8;
-	resources->maxFragmentUniformVectors = 16;
-	resources->maxVertexOutputVectors = 16;
-	resources->maxFragmentInputVectors = 15;
-	resources->minProgramTexelOffset = -8;
-	resources->maxProgramTexelOffset = 7;
-	resources->maxClipDistances = 8;
-	resources->maxComputeWorkGroupCountX = 65535;
-	resources->maxComputeWorkGroupCountY = 65535;
-	resources->maxComputeWorkGroupCountZ = 65535;
-	resources->maxComputeWorkGroupSizeX = 1024;
-	resources->maxComputeWorkGroupSizeY = 1024;
-	resources->maxComputeWorkGroupSizeZ = 64;
-	resources->maxComputeUniformComponents = 1024;
-	resources->maxComputeTextureImageUnits = 16;
-	resources->maxComputeImageUniforms = 8;
-	resources->maxComputeAtomicCounters = 8;
-	resources->maxComputeAtomicCounterBuffers = 1;
-	resources->maxVaryingComponents = 60;
-	resources->maxVertexOutputComponents = 64;
-	resources->maxGeometryInputComponents = 64;
-	resources->maxGeometryOutputComponents = 128;
-	resources->maxFragmentInputComponents = 128;
-	resources->maxImageUnits = 8;
-	resources->maxCombinedImageUnitsAndFragmentOutputs = 8;
-	resources->maxCombinedShaderOutputResources = 8;
-	resources->maxImageSamples = 0;
-	resources->maxVertexImageUniforms = 0;
-	resources->maxTessControlImageUniforms = 0;
-	resources->maxTessEvaluationImageUniforms = 0;
-	resources->maxGeometryImageUniforms = 0;
-	resources->maxFragmentImageUniforms = 8;
-	resources->maxCombinedImageUniforms = 8;
-	resources->maxGeometryTextureImageUnits = 16;
-	resources->maxGeometryOutputVertices = 256;
-	resources->maxGeometryTotalOutputComponents = 1024;
-	resources->maxGeometryUniformComponents = 1024;
-	resources->maxGeometryVaryingComponents = 64;
-	resources->maxTessControlInputComponents = 128;
-	resources->maxTessControlOutputComponents = 128;
-	resources->maxTessControlTextureImageUnits = 16;
-	resources->maxTessControlUniformComponents = 1024;
-	resources->maxTessControlTotalOutputComponents = 4096;
-	resources->maxTessEvaluationInputComponents = 128;
-	resources->maxTessEvaluationOutputComponents = 128;
-	resources->maxTessEvaluationTextureImageUnits = 16;
-	resources->maxTessEvaluationUniformComponents = 1024;
-	resources->maxTessPatchComponents = 120;
-	resources->maxPatchVertices = 32;
-	resources->maxTessGenLevel = 64;
-	resources->maxViewports = 16;
-	resources->maxVertexAtomicCounters = 0;
-	resources->maxTessControlAtomicCounters = 0;
-	resources->maxTessEvaluationAtomicCounters = 0;
-	resources->maxGeometryAtomicCounters = 0;
-	resources->maxFragmentAtomicCounters = 8;
-	resources->maxCombinedAtomicCounters = 8;
-	resources->maxAtomicCounterBindings = 1;
-	resources->maxVertexAtomicCounterBuffers = 0;
-	resources->maxTessControlAtomicCounterBuffers = 0;
-	resources->maxTessEvaluationAtomicCounterBuffers = 0;
-	resources->maxGeometryAtomicCounterBuffers = 0;
-	resources->maxFragmentAtomicCounterBuffers = 1;
-	resources->maxCombinedAtomicCounterBuffers = 1;
-	resources->maxAtomicCounterBufferSize = 16384;
-	resources->maxTransformFeedbackBuffers = 4;
-	resources->maxTransformFeedbackInterleavedComponents = 64;
-	resources->maxCullDistances = 8;
-	resources->maxCombinedClipAndCullDistances = 8;
-	resources->maxSamples = 4;
-	resources->limits.nonInductiveForLoops = 1;
-	resources->limits.whileLoops = 1;
-	resources->limits.doWhileLoops = 1;
-	resources->limits.generalUniformIndexing = 1;
-	resources->limits.generalAttributeMatrixVectorIndexing = 1;
-	resources->limits.generalVaryingIndexing = 1;
-	resources->limits.generalSamplerIndexing = 1;
-	resources->limits.generalVariableIndexing = 1;
-	resources->limits.generalConstantMatrixVectorIndexing = 1;
+	outResources->maxLights = 32;
+	outResources->maxClipPlanes = 6;
+	outResources->maxTextureUnits = 32;
+	outResources->maxTextureCoords = 32;
+	outResources->maxVertexAttribs = 64;
+	outResources->maxVertexUniformComponents = 4096;
+	outResources->maxVaryingFloats = 64;
+	outResources->maxVertexTextureImageUnits = 32;
+	outResources->maxCombinedTextureImageUnits = 80;
+	outResources->maxTextureImageUnits = 32;
+	outResources->maxFragmentUniformComponents = 4096;
+	outResources->maxDrawBuffers = 32;
+	outResources->maxVertexUniformVectors = 128;
+	outResources->maxVaryingVectors = 8;
+	outResources->maxFragmentUniformVectors = 16;
+	outResources->maxVertexOutputVectors = 16;
+	outResources->maxFragmentInputVectors = 15;
+	outResources->minProgramTexelOffset = -8;
+	outResources->maxProgramTexelOffset = 7;
+	outResources->maxClipDistances = 8;
+	outResources->maxComputeWorkGroupCountX = 65535;
+	outResources->maxComputeWorkGroupCountY = 65535;
+	outResources->maxComputeWorkGroupCountZ = 65535;
+	outResources->maxComputeWorkGroupSizeX = 1024;
+	outResources->maxComputeWorkGroupSizeY = 1024;
+	outResources->maxComputeWorkGroupSizeZ = 64;
+	outResources->maxComputeUniformComponents = 1024;
+	outResources->maxComputeTextureImageUnits = 16;
+	outResources->maxComputeImageUniforms = 8;
+	outResources->maxComputeAtomicCounters = 8;
+	outResources->maxComputeAtomicCounterBuffers = 1;
+	outResources->maxVaryingComponents = 60;
+	outResources->maxVertexOutputComponents = 64;
+	outResources->maxGeometryInputComponents = 64;
+	outResources->maxGeometryOutputComponents = 128;
+	outResources->maxFragmentInputComponents = 128;
+	outResources->maxImageUnits = 8;
+	outResources->maxCombinedImageUnitsAndFragmentOutputs = 8;
+	outResources->maxCombinedShaderOutputResources = 8;
+	outResources->maxImageSamples = 0;
+	outResources->maxVertexImageUniforms = 0;
+	outResources->maxTessControlImageUniforms = 0;
+	outResources->maxTessEvaluationImageUniforms = 0;
+	outResources->maxGeometryImageUniforms = 0;
+	outResources->maxFragmentImageUniforms = 8;
+	outResources->maxCombinedImageUniforms = 8;
+	outResources->maxGeometryTextureImageUnits = 16;
+	outResources->maxGeometryOutputVertices = 256;
+	outResources->maxGeometryTotalOutputComponents = 1024;
+	outResources->maxGeometryUniformComponents = 1024;
+	outResources->maxGeometryVaryingComponents = 64;
+	outResources->maxTessControlInputComponents = 128;
+	outResources->maxTessControlOutputComponents = 128;
+	outResources->maxTessControlTextureImageUnits = 16;
+	outResources->maxTessControlUniformComponents = 1024;
+	outResources->maxTessControlTotalOutputComponents = 4096;
+	outResources->maxTessEvaluationInputComponents = 128;
+	outResources->maxTessEvaluationOutputComponents = 128;
+	outResources->maxTessEvaluationTextureImageUnits = 16;
+	outResources->maxTessEvaluationUniformComponents = 1024;
+	outResources->maxTessPatchComponents = 120;
+	outResources->maxPatchVertices = 32;
+	outResources->maxTessGenLevel = 64;
+	outResources->maxViewports = 16;
+	outResources->maxVertexAtomicCounters = 0;
+	outResources->maxTessControlAtomicCounters = 0;
+	outResources->maxTessEvaluationAtomicCounters = 0;
+	outResources->maxGeometryAtomicCounters = 0;
+	outResources->maxFragmentAtomicCounters = 8;
+	outResources->maxCombinedAtomicCounters = 8;
+	outResources->maxAtomicCounterBindings = 1;
+	outResources->maxVertexAtomicCounterBuffers = 0;
+	outResources->maxTessControlAtomicCounterBuffers = 0;
+	outResources->maxTessEvaluationAtomicCounterBuffers = 0;
+	outResources->maxGeometryAtomicCounterBuffers = 0;
+	outResources->maxFragmentAtomicCounterBuffers = 1;
+	outResources->maxCombinedAtomicCounterBuffers = 1;
+	outResources->maxAtomicCounterBufferSize = 16384;
+	outResources->maxTransformFeedbackBuffers = 4;
+	outResources->maxTransformFeedbackInterleavedComponents = 64;
+	outResources->maxCullDistances = 8;
+	outResources->maxCombinedClipAndCullDistances = 8;
+	outResources->maxSamples = 4;
+	outResources->limits.nonInductiveForLoops = 1;
+	outResources->limits.whileLoops = 1;
+	outResources->limits.doWhileLoops = 1;
+	outResources->limits.generalUniformIndexing = 1;
+	outResources->limits.generalAttributeMatrixVectorIndexing = 1;
+	outResources->limits.generalVaryingIndexing = 1;
+	outResources->limits.generalSamplerIndexing = 1;
+	outResources->limits.generalVariableIndexing = 1;
+	outResources->limits.generalConstantMatrixVectorIndexing = 1;
 }
 
 class ShaderIncluder : public glslang::TShader::Includer
 {
 private:
-	const FileCache *headers;
+	const FileCache &headers;
 
 public:
-	ShaderIncluder(const FileCache *headers) : headers(headers) {}
+	ShaderIncluder(const FileCache &headers) : headers(headers) {}
 
 	// Resolves an inclusion request by name, type, current source name,
 	// and include depth.
@@ -633,9 +652,9 @@ public:
 	// IncludeResult object.
 	virtual IncludeResult* includeSystem(const char* requested_source, const char* requesting_source, size_t inclusion_depth)
 	{
-		const FileCache::const_iterator headerIt = headers->find(requested_source);
+		const FileCache::const_iterator headerIt = headers.find(requested_source);
 
-		if (headerIt != headers->cend())
+		if (headerIt != headers.cend())
 		{
 			return new IncludeResult(headerIt->first, headerIt->second.c_str(), headerIt->second.length(), nullptr);
 		}
@@ -656,35 +675,37 @@ public:
 	}
 };
 
-const std::string GetOutputName(const std::string *source, const std::string *outputDir)
+const std::string GetOutputName(const std::string &source, const std::string &outputDir)
 {
-	const size_t lastSlash = source->find_last_of("\\/");
+	const size_t lastSlash = source.find_last_of("\\/");
 	std::string outputName;
 
-	if (!outputDir->empty())
+	if (!outputDir.empty())
 	{
-		outputName = *outputDir + "\\";
+		outputName = outputDir + "\\";
 	}
 
-	outputName += source->substr(lastSlash + 1) + ".shader";
+	outputName += source.substr(lastSlash + 1);
 
 	return outputName;
 }
 
-static bool IsUpToDate(const SourceFile *source, const std::string *outputFile, FileModifiedMap *lastModified)
+static bool IsUpToDate(const SourceFile &source, const std::string &outputFile, FileModifiedMap *inoutLastModified)
 {
-	const uint64_t outputTime = GetLastModifiedTime(outputFile, lastModified);
+	const uint64_t sourceOutputTime = GetLastModifiedTime(outputFile + ".cpp", inoutLastModified);
+	const uint64_t headerOutputTime = GetLastModifiedTime(outputFile + ".h", inoutLastModified);
+	const uint64_t outputTime = std::max(sourceOutputTime, headerOutputTime);
 
-	UpdateLastModifiedTime(source->includeFiles.data(), (unsigned)source->includeFiles.size(), lastModified);
+	UpdateLastModifiedTime(source.includeFiles.data(), (unsigned)source.includeFiles.size(), inoutLastModified);
 
-	if (GetLastModifiedTime(&source->fileName, lastModified) > outputTime)
+	if (GetLastModifiedTime(source.fileName, inoutLastModified) > outputTime)
 	{
 		return false;
 	}
 
-	for (size_t headerIndex = 0; headerIndex < source->includeFiles.size(); ++headerIndex)
+	for (size_t headerIndex = 0; headerIndex < source.includeFiles.size(); ++headerIndex)
 	{
-		if (GetLastModifiedTime(&source->includeFiles[headerIndex], lastModified) > outputTime)
+		if (GetLastModifiedTime(source.includeFiles[headerIndex], inoutLastModified) > outputTime)
 		{
 			return false;
 		}
@@ -693,81 +714,194 @@ static bool IsUpToDate(const SourceFile *source, const std::string *outputFile, 
 	return true;
 }
 
-static bool CompileSourceFile(const SourceFile *forceInclude, SourceFile *source, const TBuiltInResource *resources, const FileCache *headers, const std::string *outputDir, const std::string *decoration, FileModifiedMap *lastModifiedMap)
+static bool CompileSourceFile(const SourceFile *optForceInclude, SourceFile *inoutSource, const TBuiltInResource &resources, const FileCache &headers, glslang::TProgram *outProgram, std::vector<unsigned> *outProgramDWords)
 {
-	glslang::TShader shader(source->stage);
+	glslang::TShader shader(inoutSource->stage);
 	const EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
-	const std::string outputName = GetOutputName(&source->fileName, outputDir);
 	ShaderIncluder includer(headers);
-	glslang::TProgram program;
-	std::vector<unsigned> spvBytes;
 	std::vector<const char *> fileNames;
 	std::vector<const char *> fileContents;
 	std::vector<int> fileContentLengths;
 
-	if (forceInclude)
+	if (optForceInclude)
 	{
-		source->includeFiles.push_back(forceInclude->fileName.c_str());
-		source->includeFiles.insert(source->includeFiles.end(), forceInclude->includeFiles.begin(), forceInclude->includeFiles.end());
+		inoutSource->includeFiles.push_back(optForceInclude->fileName.c_str());
+		inoutSource->includeFiles.insert(inoutSource->includeFiles.end(), optForceInclude->includeFiles.begin(), optForceInclude->includeFiles.end());
+
+		fileNames.push_back(optForceInclude->fileName.c_str());
+		fileContents.push_back(optForceInclude->contents.c_str());
+		fileContentLengths.push_back(static_cast<int>(optForceInclude->contents.length()));
 	}
 
-	if (IsUpToDate(source, &outputName, lastModifiedMap))
-	{
-		return true;
-	}
-
-	if(forceInclude)
-	{
-		fileNames.push_back(forceInclude->fileName.c_str());
-		fileContents.push_back(forceInclude->contents.c_str());
-		fileContentLengths.push_back(static_cast<int>(forceInclude->contents.length()));
-	}
-
-	fileNames.push_back(source->fileName.c_str());
-	fileContents.push_back(source->contents.c_str());
-	fileContentLengths.push_back(static_cast<int>(source->contents.length()));
+	fileNames.push_back(inoutSource->fileName.c_str());
+	fileContents.push_back(inoutSource->contents.c_str());
+	fileContentLengths.push_back(static_cast<int>(inoutSource->contents.length()));
 
 	shader.setStringsWithLengthsAndNames(fileContents.data(), fileContentLengths.data(), fileNames.data(), static_cast<int>(fileNames.size()));
 
-	if (!shader.parse(resources, 100, ECoreProfile, false, false, messages, includer))
+	if (!shader.parse(&resources, 100, ECoreProfile, false, false, messages, includer))
 	{
 		std::cout << shader.getInfoLog() << std::endl << shader.getInfoDebugLog() << std::endl;
-		std::cout << "Failed to parse \"" << source->fileName << "\". Excluding from build." << std::endl;
+		std::cout << "Failed to parse \"" << inoutSource->fileName << "\". Excluding from build." << std::endl;
 		return false;
 	}
 
-	program.addShader(&shader);
+	outProgram->addShader(&shader);
 
-	if (!program.link(messages))
+	if (!outProgram->link(messages))
 	{
-		std::cout << program.getInfoLog() << std::endl << program.getInfoDebugLog() << std::endl;
-		std::cout << "Failed to link \"" << source->fileName << "\". Excluding from build." << std::endl;
+		std::cout << outProgram->getInfoLog() << std::endl << outProgram->getInfoDebugLog() << std::endl;
+		std::cout << "Failed to link \"" << inoutSource->fileName << "\". Excluding from build." << std::endl;
 		return false;
 	}
 
-	glslang::GlslangToSpv(*program.getIntermediate(source->stage), spvBytes);
-	if (spvBytes.empty())
+	glslang::SpvOptions buildOptions;
+#ifdef NDEBUG
+	buildOptions.generateDebugInfo = true; 
+	buildOptions.disableOptimizer = true;
+#else //#ifdef NDEBUG
+	buildOptions.generateDebugInfo = false;
+	buildOptions.disableOptimizer = false;
+#endif //#else //#ifdef NDEBUG
+	buildOptions.optimizeSize = false;
+	buildOptions.disassemble = false;
+	buildOptions.validate = true;
+
+	glslang::GlslangToSpv(*outProgram->getIntermediate(inoutSource->stage), *outProgramDWords, &buildOptions);
+	if (outProgramDWords->empty())
 	{
-		std::cout << "No binary data generated for \"" << source->fileName << "\". Excluding from build." << std::endl;
+		std::cout << "No binary data generated for \"" << inoutSource->fileName << "\". Excluding from build." << std::endl;
 		return false;
 	}
 	else
 	{
-		std::ofstream outputSource;
+		outProgram->buildReflection(EShReflectionAllBlockVariables | EShReflectionIntermediateIO );
+	}
 
-		program.buildReflection(EShReflectionSeparateBuffers | EShReflectionIntermediateIO);
-		program.dumpReflection();
+	return true;
+}
 
-		outputSource.open(outputName);
+static const char* StageToReflectionStr(EShLanguage stage)
+{
+	switch (stage)
+	{
+		case EShLangVertex:         return "ShaderStageType::VERTEX";
+		case EShLangTessControl:    return "ShaderStageType::TESS_CONTROL";
+		case EShLangTessEvaluation: return "ShaderStageType::TESS_EVAL";
+		case EShLangGeometry:       return "ShaderStageType::GEOMETRY";
+		case EShLangFragment:       return "ShaderStageType::FRAGMENT";
+		case EShLangCompute:        return "ShaderStageType::COMPUTE";
+	}
 
-		if (!outputSource.is_open())
+	return "<ERROR -- UNKNOWN STAGE>";
+}
+
+static std::string FilenameToReflectionPrefix(const std::string& outputName)
+{
+	const size_t lastSlash = outputName.find_last_of("\\/");
+	std::string prefix = outputName.substr(lastSlash + 1) + "_";
+
+	for (char& ch : prefix)
+	{
+		if (ch == '.')
+			ch = '_';
+	}
+
+	return prefix;
+}
+
+static bool ShaderProgramToC(const std::string& outputName, EShLanguage stage, glslang::TProgram& prog, const std::vector<unsigned> &progDWords)
+{
+	const std::string headerName = outputName + ".h";
+	std::ofstream header(headerName, std::ios::out);
+
+	if (!header)
+	{
+		std::cout << "Failed to open \"" << headerName.c_str() << "\" for writing." << std::endl;
+		return false;
+	}
+	else
+	{
+		const std::string sourceName = outputName + ".cpp";
+		std::ofstream source(sourceName, std::ios::out);
+
+		if (!source)
 		{
-			std::cout << "Could not open \"" << outputName << "\" for writting." << std::endl;
+			std::cout << "Failed to open \"" << sourceName.c_str() << "\" for writing." << std::endl;
 			return false;
 		}
 		else
 		{
-			outputSource.write(reinterpret_cast<const char*>(spvBytes.data()), spvBytes.size()*sizeof(uint32_t));
+			const std::string prefix = FilenameToReflectionPrefix(outputName);
+
+			header << "// Generated by GLSLToC. Do no modify." << std::endl;
+			header << std::endl;
+			header << "#pragma once" << std::endl;
+			header << std::endl;
+			header << "#include \"ShaderReflection.h\"" << std::endl;
+			header << std::endl;
+
+			source << "// Generated by GLSLToC. Do no modify." << std::endl;
+			source << std::endl;
+			source << "#include \"" << GetFilename(headerName.c_str()) << "\"" << std::endl;
+			source << std::endl;
+
+			header << "extern const ShaderModule " << prefix << "shader;" << std::endl;
+
+			source << "static const unsigned " << prefix << "prog[] = {" << std::hex << std::endl;
+			for (size_t progIndex = 0; progIndex < progDWords.size();)
+			{
+				source << "\t";
+				for (size_t lineIndex = 0; lineIndex < 8 && progIndex < progDWords.size(); ++lineIndex, ++progIndex)
+				{
+					source << "0x" << std::setw(8) << std::setfill('0') << progDWords[progIndex];
+
+					if (progIndex + 1 < progDWords.size())
+						source << ", ";
+				}
+
+				source << std::endl;
+			}
+			source << "};" << std::dec << std::endl;
+			source << std::endl;
+
+			const int uboCount = prog.getNumUniformBlocks();
+
+			source << "static const char * const " << prefix << "ubo_names[] = {" << std::endl;
+			for (int uboIndex = 0; uboIndex < uboCount; ++uboIndex)
+			{
+				const glslang::TObjectReflection& ubo = prog.getUniformBlock(uboIndex);
+
+				source << "\t\"" << ubo.name << "\"," << std::endl;
+			}
+			source << "\t\"\"" << std::endl;
+			source << "};" << std::endl;
+			source << std::endl;
+
+			source << "static const ShaderUniformBlock " << prefix << "ubos[] = {" << std::endl;
+			for (int uboIndex = 0; uboIndex < uboCount; ++uboIndex)
+			{
+				const glslang::TObjectReflection& ubo = prog.getUniformBlock(uboIndex);
+
+				source << "\t{ " << ubo.getBinding() << ", " << ubo.size << " }," << std::endl;
+			}
+			source << "\t{}" << std::endl;
+			source << "};" << std::endl;
+			source << std::endl;
+
+			source << "const ShaderModule " << prefix << "shader = {" << std::endl;
+			source << "\t\"" << GetFilename(outputName.c_str()) << "\"," << std::endl;
+			source << "\t\"main\"," << std::endl;
+			source << "\t" << prefix << "prog," << std::endl;
+			source << "\t" << prefix << "ubo_names," << std::endl;
+			source << "\t" << prefix << "ubos," << std::endl;
+			source << "\t" << progDWords.size() << "," << std::endl;
+			source << "\t" << StageToReflectionStr(stage) << "," << std::endl;
+			source << "\t" << prog.getNumUniformBlocks() << "," << std::endl;
+			source << "\t" << prog.getNumPipeInputs() << "," << std::endl;
+			source << "\t" << prog.getNumPipeOutputs() << std::endl;
+			source << "};" << std::endl;
+			source << std::endl;
 		}
 	}
 
@@ -805,7 +939,7 @@ int main(int argc, char *argv[])
 		UpdateLastModifiedTime(&settings.forceInclude, 1, &lastModifiedMap);
 
 		forceInclude.fileName.swap(settings.forceInclude);
-		if (!LoadSourceFile(&forceInclude.fileName, &settings.includeDirs, &headerCache, &forceInclude.includeFiles, &forceInclude.contents))
+		if (!LoadSourceFile(forceInclude.fileName, settings.includeDirs, &headerCache, &forceInclude.includeFiles, &forceInclude.contents))
 		{
 			std::cout << "Failed to load force include file." << std::endl;
 			return -101;
@@ -819,31 +953,88 @@ int main(int argc, char *argv[])
 	}
 
 	ret = 0;
+	std::vector<std::string> validPrograms;
 	for (size_t sourceIndex = 0; sourceIndex < settings.inputFiles.size(); ++sourceIndex)
 	{
+		const std::string inputFilename = settings.inputFiles[sourceIndex];
+ 		std::string outputName = GetOutputName(inputFilename, settings.outputDir);
 		SourceFile source;
 
 		source.fileName.swap(settings.inputFiles[sourceIndex]);
 
-		if (!LoadSourceFile(&source.fileName, &settings.includeDirs, &headerCache, &source.includeFiles, &source.contents))
+		if (!LoadSourceFile(source.fileName, settings.includeDirs, &headerCache, &source.includeFiles, &source.contents))
 		{
 			--ret;
-			std::cout << "Failed to and parse \"" << source.fileName << "\". Exluding from build." << std::endl;
-			continue;
+			std::cout << "Failed to load and parse \"" << source.fileName << "\". Exluding from build." << std::endl;
 		}
+		else
+		{
+			if (IsUpToDate(source, outputName, &lastModifiedMap))
+			{
+				validPrograms.emplace_back(std::move(outputName));
+			}
+			else
+			{
+				if (!DetermineStageFromFileName(source.fileName, &source.stage))
+				{
+					--ret;
+				}
+				else
+				{
+					glslang::TProgram shaderProgReflection;
+					std::vector<unsigned> shaderProg;
+					if (!CompileSourceFile(forceIncludePtr, &source, resources, headerCache, &shaderProgReflection, &shaderProg))
+					{
+						--ret;
+						std::cout << "Failed to compile \"" << source.fileName << "\". Exluding from build." << std::endl;
+					}
+					else
+					{
+						if (ShaderProgramToC(outputName, source.stage, shaderProgReflection, shaderProg))
+						{
+							validPrograms.emplace_back(outputName);
+						}
+					}
+				}
+			}
+		}
+	}
 
-		if (!DetermineStageFromFileName(&source.fileName, &source.stage))
-		{
-			--ret;
-			continue;
-		}
+	if (!validPrograms.empty())
+	{
+		std::string allFilename = settings.outputDir + "\\Shaders";
+		std::ofstream allHeader(allFilename + ".h");
+		std::ofstream allSource(allFilename + ".cpp");
 
-		if (!CompileSourceFile(forceIncludePtr, &source, &resources, &headerCache, &settings.outputDir, &settings.decoration, &lastModifiedMap))
+		allHeader << "// Generated by GLSLToC. Do no modify." << std::endl;
+		allHeader << std::endl;
+		allHeader << "#pragma once" << std::endl;
+		allHeader << std::endl;
+
+		allHeader << "struct ShaderModule;" << std::endl;
+		allHeader << std::endl;
+
+		allHeader << "extern const unsigned shader_count;" << std::endl;
+		allHeader << "extern const ShaderModule * const shaders[];" << std::endl;
+
+		allSource << "// Generated by GLSLToC. Do no modify." << std::endl;
+		allSource << std::endl;
+
+		allSource << "#include \"Shaders.h\"" << std::endl;
+		for (const std::string& file : validPrograms)
 		{
-			--ret;
-			std::cout << "Failed to compile \"" << source.fileName << "\". Exluding from build." << std::endl;
-			continue;
+			allSource << "#include \"" << GetFilename(file.c_str()) << ".h\"" << std::endl;
 		}
+		allSource << std::endl;
+
+		allSource << "const unsigned shader_count = " << validPrograms.size() << ";" << std::endl;
+		allSource << "const ShaderModule * const shaders[] = {" << std::endl;
+		for (const std::string& file : validPrograms)
+		{
+			allSource << "\t&" << FilenameToReflectionPrefix(file) << "shader," << std::endl;
+		}
+		allSource << "\tnullptr" << std::endl;
+		allSource << "};" << std::endl;
 	}
 
 	return ret;

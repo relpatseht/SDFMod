@@ -1,5 +1,4 @@
 #include <vulkan/vulkan.h>
-#include <shaderc/shaderc.hpp>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,6 +11,9 @@
 #include <array>
 #include <tuple>
 #include <chrono>
+
+#include "shaders_generated/trivial.frag.h"
+#include "shaders_generated/trivial.vert.h"
 
 #define STACK_ARRAY(TYPE, COUNT) (TYPE*)alloca(sizeof(TYPE) * (COUNT))
 #define ARRAY_COUNT(ARR) (sizeof((ARR)) / sizeof((ARR)[0]))
@@ -484,59 +486,12 @@ namespace vk
 
 	namespace shader
 	{
-		bool GLSLtoSPV(VkShaderStageFlagBits shaderType, const char *shaderTxt, std::vector<uint32_t> *outSpirv) 
-		{
-			shaderc::Compiler compiler;
-			shaderc::CompileOptions options;
-
-			options.SetWarningsAsErrors();
-			options.SetOptimizationLevel(shaderc_optimization_level_size);
-
-			shaderc_shader_kind kind;
-
-			switch (shaderType)
-			{
-				case VK_SHADER_STAGE_VERTEX_BIT:
-					kind = shaderc_glsl_default_vertex_shader;
-				break;
-				case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-					kind = shaderc_glsl_default_tess_control_shader;
-				break;
-				case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-					kind = shaderc_glsl_default_tess_evaluation_shader;
-				break;
-				case VK_SHADER_STAGE_GEOMETRY_BIT:
-					kind = shaderc_glsl_default_geometry_shader;
-				break;
-				case VK_SHADER_STAGE_FRAGMENT_BIT:
-					kind = shaderc_glsl_default_fragment_shader;
-				break;
-				case VK_SHADER_STAGE_COMPUTE_BIT:
-					kind = shaderc_glsl_default_compute_shader;
-				break;
-				default:
-					kind = shaderc_glsl_infer_from_source;
-			}
-
-			shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(shaderTxt, kind, "shader", options);
-
-			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
-			{
-				std::cout << "[SPV] " << module.GetErrorMessage() << std::endl;
-				return false;
-			}
-
-			outSpirv->clear();
-			outSpirv->insert(outSpirv->begin(), module.cbegin(), module.cend());
-			return true;
-		}
-
-		VkShaderModule CreateShaderModule(VkDevice dev, const std::vector<uint32_t> &spirv)
+		VkShaderModule CreateShaderModule(VkDevice dev, const uint32_t * const spirv, uint32_t spirvSize)
 		{
 			VkShaderModuleCreateInfo createInfo = {};
 			createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			createInfo.codeSize = spirv.size() * sizeof(uint32_t);
-			createInfo.pCode = spirv.data();
+			createInfo.codeSize = spirvSize * sizeof(uint32_t);
+			createInfo.pCode = spirv;
 
 			VkShaderModule shaderModule;
 			vkCreateShaderModule(dev, &createInfo, nullptr, &shaderModule);
@@ -742,60 +697,20 @@ namespace vk
 
 		std::tuple<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkDevice dev, VkRenderPass renderPass, VkDescriptorSetLayout descSetLayout, VkExtent2D viewportExtents)
 		{
-			std::vector<uint32_t> vertSpirv, fragSpirv;
-
-			shader::GLSLtoSPV(VK_SHADER_STAGE_VERTEX_BIT, R"##(
-			#version 450
-			#extension GL_ARB_separate_shader_objects : enable
-
-			layout(binding = 0) uniform UniformBufferObject {
-				mat4 model;
-				mat4 view;
-				mat4 proj;
-			} ubo;
-
-			layout(location = 0) in vec3 inPosition;
-			layout(location = 1) in vec3 inColor;
-
-			layout(location = 0) out vec3 fragColor;
-
-			out gl_PerVertex{
-				vec4 gl_Position;
-			};
-
-			void main() {
-				gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
-				fragColor = inColor;
-			}
-			)##", &vertSpirv);
-
-			
-			shader::GLSLtoSPV(VK_SHADER_STAGE_FRAGMENT_BIT, R"##(
-			#version 450
-			#extension GL_ARB_separate_shader_objects : enable
-
-			layout(location = 0) in vec3 fragColor;
-			layout(location = 0) out vec4 outColor;
-
-			void main() {
-				outColor = vec4(fragColor, 1.0);
-			}
-			)##", &fragSpirv);
-
-			VkShaderModule vertShaderModule = shader::CreateShaderModule(dev, vertSpirv);
-			VkShaderModule fragShaderModule = shader::CreateShaderModule(dev, fragSpirv);
+			VkShaderModule vertShaderModule = shader::CreateShaderModule(dev, trivial_vert_shader.progam, trivial_vert_shader.programSizeDWords);
+			VkShaderModule fragShaderModule = shader::CreateShaderModule(dev, trivial_frag_shader.progam, trivial_frag_shader.programSizeDWords);
 
 			VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
 			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 			vertShaderStageInfo.module = vertShaderModule;
-			vertShaderStageInfo.pName = "main";
+			vertShaderStageInfo.pName = trivial_vert_shader.entryPoint;
 
 			VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
 			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 			fragShaderStageInfo.module = fragShaderModule;
-			fragShaderStageInfo.pName = "main";
+			fragShaderStageInfo.pName = trivial_frag_shader.entryPoint;
 
 			VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
@@ -1231,7 +1146,7 @@ namespace vk
 	{
 		static const char *requiredExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 		static const StringSet requiredExtensionSet(&requiredExtensions[0], &requiredExtensions[0] + ARRAY_COUNT(requiredExtensions));
-		static const char *layers[] = { "VK_LAYER_LUNARG_standard_validation" };
+		static const char *layers[] = { "VK_LAYER_KHRONOS_validation" };
 
 		VkInstance inst = init::CreateInstance(layers, ARRAY_COUNT(layers));
 		outV->callback = init::CreateDebugCallback(inst);

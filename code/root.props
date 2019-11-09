@@ -14,16 +14,15 @@
 
     <GLFWIncludePath>$(GLFWFolder)include;</GLFWIncludePath>
     <GLMIncludePath>$(GLMFolder)</GLMIncludePath>
-    <NuklearIncludePath>$(NuklearFolder)</NuklearIncludePath>
     <VulkanIncludePath>$(VulkanFolder)/Include</VulkanIncludePath>
     <GLSLangIncludePath>$(GLSLangFolder)</GLSLangIncludePath>
     
     <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
 
-    <IntDir>$(ProjectFolder)obj/$(ProjectName)/$(Configuration)/</IntDir>
+    <IntDir>$(ProjectFolder)obj/$(MSBuildProjectName)/$(Configuration)/</IntDir>
     <OutDir>$(ProjectFolder)bin/</OutDir>
-    <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)_d</TargetName>
-    <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Debug'">$(MSBuildProjectName)_d</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Release'">$(MSBuildProjectName)</TargetName>
 
     <RootImported>true</RootImported>
   </PropertyGroup> 
