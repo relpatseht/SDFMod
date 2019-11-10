@@ -32,6 +32,7 @@ struct Settings
 	StringList inputFiles;
 	std::string outputDir;
 	std::string decoration;
+	bool force = false;
 };
 
 static const char* GetFilename(const char* dir)
@@ -228,6 +229,9 @@ static bool ParseSettings(int argc, char *argv[], Settings *outSettings)
 
 					outSettings->forceInclude = arg + 2;
 				break;
+				case 'f':
+					outSettings->force = true;
+				break;
 				case 'O':
 					if (!GetFullPathName(arg + 2, sizeof(fileBuf), fileBuf, nullptr))
 					{
@@ -343,6 +347,7 @@ static void PrintHelp()
 	std::cout << "    -I: An include directory search path. Multiple -I paramaters are accepted." << std::endl;
 	std::cout << "    -O: The output directory you'd like the header files placed in." << std::endl;
 	std::cout << "    -F: The path to the force include file. Include directories are searched." << std::endl;
+	std::cout << "    -f: Force recompile, even if no changes." << std::endl;
 	std::cout << std::endl;
 }
 
@@ -969,7 +974,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			if (IsUpToDate(source, outputName, &lastModifiedMap))
+			if (!settings.force && IsUpToDate(source, outputName, &lastModifiedMap))
 			{
 				validPrograms.emplace_back(std::move(outputName));
 			}
