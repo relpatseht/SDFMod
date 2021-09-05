@@ -34,7 +34,7 @@ static const ShaderUniformBlock trivial_frag_ubos[] = {
 	{}
 };
 
-const ShaderModule trivial_frag_shader = {
+extern "C" const ShaderModule trivial_frag_shader = {
 	"trivial.frag",
 	"main",
 	trivial_frag_prog,

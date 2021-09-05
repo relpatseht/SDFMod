@@ -1197,8 +1197,6 @@ namespace vk
 	}
 }
 
-
-
 int main()
 {
 	vk::VulkanWindow vkWindow;

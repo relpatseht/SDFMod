@@ -4,4 +4,4 @@
 
 #include "ShaderReflection.h"
 
-extern const ShaderModule trivial_frag_shader;
+extern "C" __declspec(dllexport) const ShaderModule trivial_frag_shader;

@@ -10,12 +10,14 @@
     <GLFWFolder>$(CodeExternalFolder)glfw\3.3\</GLFWFolder>
     <GLMFolder>$(CodeExternalFolder)glm\0.9.9.6\</GLMFolder>
     <GLSLangFolder>$(CodeExternalFolder)glslang\7.13.3496\</GLSLangFolder>
+    <ImGuiFolder>$(CodeExternalFolder)imgui\1.84.2\</ImGuiFolder>
     <VulkanFolder>$(VULKAN_SDK)/../1.1.121.2</VulkanFolder>
 
     <GLFWIncludePath>$(GLFWFolder)include;</GLFWIncludePath>
     <GLMIncludePath>$(GLMFolder)</GLMIncludePath>
     <VulkanIncludePath>$(VulkanFolder)/Include</VulkanIncludePath>
     <GLSLangIncludePath>$(GLSLangFolder)</GLSLangIncludePath>
+    <ImGuiIncludePath>$(ImGuiFolder)</ImGuiIncludePath>
     
     <VulkanLibraryPath>$(VulkanFolder)/Lib</VulkanLibraryPath>
 

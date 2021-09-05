@@ -4,6 +4,9 @@
     <Filter Include="shaders_generated">
       <UniqueIdentifier>{b13ef5eb-000f-4e71-a5d5-a26a1b5d093f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{cae934f3-7e08-44b8-9eaf-d0a1dbcfff38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -15,6 +18,12 @@
     </ClCompile>
     <ClCompile Include="shaders_generated\trivial.vert.cpp">
       <Filter>shaders_generated</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ImGuiIncludePath)/backends/imgui_impl_vulkan.cpp">
+      <Filter>external</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ImGuiIncludePath)/backends/imgui_impl_vulkan.h">
+      <Filter>external</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
