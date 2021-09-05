@@ -7,3 +7,6 @@
 [submodule "code/external/glm/0.9.9.6"]
 	path = code/external/glm/0.9.9.6
 	url = git@github.com:g-truc/glm.git
+[submodule "code/external/imgui/1.84.2"]
+	path = code/external/imgui/1.84.2
+	url = git@github.com:ocornut/imgui.git
